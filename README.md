@@ -32,7 +32,7 @@ Khi mở cửa sổ popup cài đặt:
 
 ## Cách sử dụng
 
-1. Khi tiện ích được kích hoạt, nội dung trang sẽ tự động được tích hợp audio-player.  
+1. Khi tiện ích được kích hoạt, người dùng có thể bôi đen văn bản cần chuyển đổi, sau đó click chuột phải để mở context menu và chọn "Speak with Reseter TTS Converter".
 2. Nếu quá trình chuyển đổi đang diễn ra, audio-player sẽ hiển thị trạng thái loading.
 3. Người dùng có thể nhấn nút "Save Settings" trên popup để lưu cấu hình đã thay đổi.
 4. Nếu cần hủy chuyển đổi, có thể nhấn nút "Close" trên audio-player để dừng và đóng cửa sổ phát.
