@@ -10,7 +10,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             border-radius: 12px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
             padding: 16px;
-            width: 340px;
+            width: 380px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(0, 0, 0, 0.08);
             backdrop-filter: blur(10px);
@@ -38,7 +38,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 40px);
-            max-width: 400px;
+            max-width: 420px;
             animation: fadeInMobile 0.5s forwards;
           }
 
@@ -56,22 +56,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
           /* Player title */
           .player-title {
-            font-size: 15px;
+            font-size: 16px;
+            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
             font-weight: 600;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             color: #333;
-            padding-bottom: 8px;
+            padding-bottom: 10px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            letter-spacing: -0.2px;
           }
 
           /* Player controls container */
           .player-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
           }
 
           /* Play/Pause button */
@@ -129,9 +131,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
           /* Progress bar */
           .progress-container {
-            flex: 1;
-            padding: 0 4px;
-            height: 20px;
+            flex: 1.5;
+            padding: 0 6px;
+            height: 22px;
             display: flex;
             align-items: center;
           }
@@ -165,7 +167,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
           /* Volume controls */
           .volume-slider-container {
-            width: 70px;
+            width: 60px;
             height: 20px;
             display: flex;
             align-items: center;
@@ -318,7 +320,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
               </button>
-              <div class="player-title">Reseter TTS Converter</div>
+              <div class="player-title" style="font-weight: bold;">Reseter TTS Converter</div>
               <div class="loading-indicator">
                 <div class="loading-dots">
                   <span></span>
@@ -353,21 +355,242 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return;
     }
 
-    const audioElement = document.createElement('audio');
-    audioElement.src = request.audioSrc;
-    audioElement.className = 'audio-element';
-    audioElement.controls = true;
     audioPlayer.innerHTML = '';
-    audioPlayer.appendChild(audioElement);
 
-    audioElement.addEventListener('error', (e) => {
-      console.error('Audio error:', e);
-      audioPlayer.querySelector(".player-title").textContent = "Error playing audio";
-    });
+    // Khởi tạo Web Audio API context và các biến cần thiết
+    let audioContext;
+    let audioSource;
+    let audioBuffer;
+    let startTime = 0;
+    let pausedTime = 0;
+    let isPlaying = false;
+    let audioDuration = 0;
+    let progressUpdateInterval;
+    let gainNode;
 
-    audioElement.addEventListener('canplay', () => {
-      console.log('Audio can be played');
-    });
+    // Thay thế hàm createBlobUrlFromSrc bằng hàm xử lý audio trực tiếp
+    const processAudioFromSrc = (src) => {
+      return new Promise((resolve, reject) => {
+        fetch(src)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.arrayBuffer();
+          })
+          .then(arrayBuffer => {
+            // Khởi tạo AudioContext nếu chưa có
+            if (!audioContext) {
+              audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            // Decode audio data
+            return audioContext.decodeAudioData(arrayBuffer);
+          })
+          .then(buffer => {
+            audioBuffer = buffer;
+            audioDuration = buffer.duration;
+            resolve(buffer);
+          })
+          .catch(error => {
+            console.error('Error processing audio:', error);
+            reject(error);
+          });
+      });
+    };
+
+    // Tạo audio element giả (để tương thích với giao diện hiện tại)
+    const audioElement = {
+      duration: 0,
+      currentTime: 0,
+      volume: 1,
+      paused: true,
+
+      play: function () {
+        return new Promise((resolve, reject) => {
+          try {
+            if (!audioContext) {
+              audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioContext.state === 'suspended') {
+              audioContext.resume();
+            }
+
+            // Dừng nguồn âm thanh hiện tại nếu có
+            if (audioSource) {
+              audioSource.stop();
+              audioSource = null;
+            }
+
+            // Tạo nguồn âm thanh mới
+            audioSource = audioContext.createBufferSource();
+            audioSource.buffer = audioBuffer;
+
+            // Tạo mới gain node cho điều chỉnh âm lượng
+            gainNode = audioContext.createGain();
+            gainNode.gain.value = this.volume;
+
+            // Kết nối các node
+            audioSource.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Ghi lại thời điểm bắt đầu phát
+            startTime = audioContext.currentTime;
+
+            // Bắt đầu phát từ vị trí pausedTime
+            audioSource.start(0, pausedTime);
+            isPlaying = true;
+            this.paused = false;
+
+            // Thiết lập interval để cập nhật tiến trình
+            if (progressUpdateInterval) {
+              clearInterval(progressUpdateInterval);
+            }
+
+            progressUpdateInterval = setInterval(() => {
+              if (isPlaying) {
+                // Tính toán thời gian hiện tại
+                const elapsedTime = audioContext.currentTime - startTime;
+                this.currentTime = Math.min(pausedTime + elapsedTime, audioDuration);
+
+                // Cập nhật giao diện
+                updateProgress();
+
+                // Kiểm tra nếu đã phát hết
+                if (this.currentTime >= audioDuration - 0.1) {
+                  this.pause();
+                  pausedTime = 0;
+                  this.currentTime = 0;
+                  playIcon.classList.remove("hidden");
+                  pauseIcon.classList.add("hidden");
+                  clearInterval(progressUpdateInterval);
+                }
+              } else {
+                clearInterval(progressUpdateInterval);
+              }
+            }, 30);
+
+            // Xử lý sự kiện kết thúc
+            audioSource.onended = () => {
+              if (!isPlaying) return;
+
+              // Nếu kết thúc do đã phát hết, reset về đầu
+              if (pausedTime + (audioContext.currentTime - startTime) >= audioDuration - 0.1) {
+                this.pause();
+                pausedTime = 0;
+                this.currentTime = 0;
+                playIcon.classList.remove("hidden");
+                pauseIcon.classList.add("hidden");
+              }
+            };
+
+            resolve();
+          } catch (error) {
+            console.error('Error playing audio:', error);
+            reject(error);
+          }
+        });
+      },
+
+      pause: function () {
+        if (!isPlaying || !audioSource) return;
+
+        try {
+          // Dừng nguồn âm thanh
+          audioSource.stop();
+          audioSource = null;
+
+          // Lưu vị trí đã tạm dừng
+          const elapsedTime = audioContext.currentTime - startTime;
+          pausedTime = Math.min(pausedTime + elapsedTime, audioDuration);
+
+          // Cập nhật trạng thái
+          isPlaying = false;
+          this.paused = true;
+        } catch (error) {
+          console.error('Error pausing audio:', error);
+        }
+      },
+
+      addEventListener: function (event, callback) {
+        if (event === 'loadedmetadata') {
+          if (audioDuration > 0) {
+            callback();
+          }
+        } else if (event === 'canplay') {
+          if (audioBuffer) {
+            callback();
+          }
+        }
+      }
+    };
+
+    // Xử lý phát từ vị trí mới khi click vào thanh tiến trình
+    function seekToPosition(positionPercent) {
+      try {
+        // Tính toán thời gian mới dựa trên phần trăm
+        const newPosition = Math.max(0, Math.min(positionPercent, 1)) * audioDuration;
+
+        // Dừng nguồn âm thanh hiện tại nếu đang phát
+        if (audioSource && isPlaying) {
+          audioSource.stop();
+          audioSource = null;
+        }
+
+        // Cập nhật thời gian và giao diện
+        pausedTime = newPosition;
+        audioElement.currentTime = newPosition;
+        progressFill.style.width = `${(newPosition / audioDuration) * 100}%`;
+        currentTimeDisplay.textContent = formatTime(newPosition);
+
+        // Nếu đang phát, bắt đầu phát lại từ vị trí mới
+        if (isPlaying) {
+          audioElement.play().catch(err => {
+            console.error("Error playing after seek:", err);
+          });
+        }
+
+        return newPosition;
+      } catch (error) {
+        console.error('Error seeking to position:', error);
+        return 0;
+      }
+    }
+
+    function formatTime(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = Math.floor(seconds % 60);
+      return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+    }
+
+    function updateProgress() {
+      if (!isDraggingProgress && audioElement.duration) {
+        const percentage = (audioElement.currentTime / audioElement.duration) * 100;
+        progressFill.style.width = `${percentage}%`;
+        currentTimeDisplay.textContent = formatTime(audioElement.currentTime);
+      }
+    }
+
+    function setProgress(e) {
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      const positionPercent = clickX / rect.width;
+
+      seekToPosition(positionPercent);
+    }
+
+    processAudioFromSrc(request.audioSrc)
+      .then(buffer => {
+        audioElement.duration = buffer.duration;
+        audioDuration = buffer.duration;
+        durationDisplay.textContent = formatTime(buffer.duration);
+        console.log('Audio loaded and ready to play');
+      })
+      .catch(error => {
+        console.error('Error loading audio:', error);
+        audioPlayer.querySelector(".player-title").textContent = "Error loading audio";
+      });
 
     audioPlayer.innerHTML += `
           <button class="close-btn">
@@ -376,7 +599,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
-          <div class="player-title">Reseter TTS Converter</div>
+          <div class="player-title" style="font-weight: bold;">Reseter TTS Converter</div>
           <div class="player-controls">
             <button class="play-pause-btn">
               <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -433,34 +656,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     let isMuted = false;
     let previousVolume = 1;
 
-    function formatTime(seconds) {
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = Math.floor(seconds % 60);
-      return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
-    }
-
-    function updateProgress() {
-      if (!isDraggingProgress && audioElement.duration) {
-        const percentage = (audioElement.currentTime / audioElement.duration) * 100;
-        progressFill.style.width = `${percentage}%`;
-        currentTimeDisplay.textContent = formatTime(audioElement.currentTime);
-      }
-    }
-
-    function setProgress(e) {
-      const width = progressBar.clientWidth;
-      const clickX = e.offsetX;
-      const duration = audioElement.duration;
-
-      if (e.target !== progressBar) {
-        const rect = progressBar.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        audioElement.currentTime = (clickX / width) * duration;
-      } else {
-        audioElement.currentTime = (clickX / width) * duration;
-      }
-    }
-
     function setVolume(e) {
       const width = volumeSlider.clientWidth;
       const clickX = e.offsetX;
@@ -475,6 +670,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
       audioElement.volume = volumeLevel;
+      if (gainNode) {
+        gainNode.gain.value = volumeLevel;
+      }
       volumeFill.style.width = `${volumeLevel * 100}%`;
 
       if (volumeLevel === 0) {
@@ -507,12 +705,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     function toggleMute() {
       if (isMuted) {
         audioElement.volume = previousVolume;
+        if (gainNode) {
+          gainNode.gain.value = previousVolume;
+        }
         volumeFill.style.width = `${previousVolume * 100}%`;
         volumeIcon.classList.remove("hidden");
         muteIcon.classList.add("hidden");
       } else {
         previousVolume = audioElement.volume;
         audioElement.volume = 0;
+        if (gainNode) {
+          gainNode.gain.value = 0;
+        }
         volumeFill.style.width = "0%";
         volumeIcon.classList.add("hidden");
         muteIcon.classList.remove("hidden");
@@ -521,7 +725,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 
     function closePlayer() {
-      audioElement.pause();
+      if (audioSource && isPlaying) {
+        audioSource.stop();
+        audioSource = null;
+      }
+
+      if (progressUpdateInterval) {
+        clearInterval(progressUpdateInterval);
+        progressUpdateInterval = null;
+      }
+
+      isPlaying = false;
+      pausedTime = 0;
+
       audioPlayer.style.animation = "none";
       audioPlayer.style.opacity = "1";
 
@@ -534,6 +750,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       audioPlayer.style.opacity = "0";
 
       setTimeout(() => {
+        audioBuffer = null;
+        gainNode = null;
+
+        if (audioContext && audioContext.state !== 'closed') {
+          try {
+            audioContext.close().catch(e => console.log('Cannot close AudioContext:', e));
+          } catch (e) {
+            console.log('Error closing AudioContext:', e);
+          }
+          audioContext = null;
+        }
+
         audioPlayer.remove();
       }, 300);
     }
@@ -570,13 +798,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
 
     progressBar.addEventListener("touchstart", (e) => {
+      e.preventDefault();
       const touch = e.touches[0];
       const rect = progressBar.getBoundingClientRect();
-      const clickX = touch.clientX - rect.left;
-      const width = progressBar.clientWidth;
-      const duration = audioElement.duration;
+      const clickX = Math.max(0, Math.min(touch.clientX - rect.left, rect.width));
+      const positionPercent = clickX / rect.width;
 
-      audioElement.currentTime = (clickX / width) * duration;
+      isDraggingProgress = true;
+      seekToPosition(positionPercent);
+    });
+
+    progressBar.addEventListener("touchmove", (e) => {
+      if (isDraggingProgress) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = progressBar.getBoundingClientRect();
+        const clickX = Math.max(0, Math.min(touch.clientX - rect.left, rect.width));
+        const positionPercent = clickX / rect.width;
+
+        seekToPosition(positionPercent);
+      }
+    });
+
+    progressBar.addEventListener("touchend", (e) => {
+      if (isDraggingProgress) {
+        e.preventDefault();
+        isDraggingProgress = false;
+      }
     });
 
     volumeSlider.addEventListener("touchstart", (e) => {
@@ -936,5 +1184,221 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     window.addEventListener("resize", updateErrorPosition);
     updateErrorPosition();
+  } else if (request.action === "InjectConvertButton") {
+    let existingButton = document.querySelector('.tts-convert-btn');
+    if (existingButton) {
+      return;
+    }
+
+    const style = document.createElement("style");
+    style.textContent = `
+      /* Convert Button Styles */
+      .tts-convert-btn {
+        position: fixed;
+        z-index: 9999;
+        background: linear-gradient(90deg, #f50, #ff7e33);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(255, 85, 0, 0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      /* Desktop positioning (bottom-right) */
+      .tts-convert-btn.desktop {
+        bottom: 24px;
+        right: 24px;
+      }
+
+      /* Mobile positioning (bottom-center) */
+      .tts-convert-btn.mobile {
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .tts-convert-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(255, 85, 0, 0.35);
+      }
+
+      .tts-convert-btn.mobile:hover {
+        transform: translateX(-50%) scale(1.05);
+      }
+
+      .tts-convert-btn:active {
+        transform: scale(0.95);
+      }
+
+      .tts-convert-btn.mobile:active {
+        transform: translateX(-50%) scale(0.95);
+      }
+    `;
+    document.head.appendChild(style);
+
+    let convertButton = document.createElement('button');
+    convertButton.className = 'tts-convert-btn';
+    convertButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="23"></line>
+        <line x1="8" y1="23" x2="16" y2="23"></line>
+      </svg>
+      TTS with Reseter TTS
+    `;
+    document.body.appendChild(convertButton);
+
+    function isMobile() {
+      return window.innerWidth < 768;
+    }
+
+    function updateButtonPosition() {
+      if (isMobile()) {
+        convertButton.classList.add("mobile");
+        convertButton.classList.remove("desktop");
+      } else {
+        convertButton.classList.add("desktop");
+        convertButton.classList.remove("mobile");
+      }
+    }
+
+    window.addEventListener("resize", updateButtonPosition);
+    updateButtonPosition();
+
+    convertButton.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const selectedText = window.getSelection().toString().trim();
+      if (!selectedText) {
+        chrome.runtime.sendMessage({
+          action: "ShowError",
+          error: "No text selected! Please select some text first."
+        });
+        return;
+      }
+
+      chrome.runtime.sendMessage({
+        action: "HandleConvertOnContentButton",
+        text: selectedText
+      }, function (response) {
+        console.log("Response from background:", response);
+      });
+    });
   }
 });
+
+// Tạo nút Convert Button trực tiếp khi content script được tải
+(function injectConvertButton() {
+  const style = document.createElement("style");
+  style.textContent = `
+    /* Convert Button Styles */
+    .tts-convert-btn {
+      position: fixed;
+      z-index: 9999;
+      background: linear-gradient(90deg, #f50, #ff7e33);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(255, 85, 0, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    /* Desktop positioning (bottom-right) */
+    .tts-convert-btn.desktop {
+      bottom: 24px;
+      right: 24px;
+    }
+
+    /* Mobile positioning (bottom-center) */
+    .tts-convert-btn.mobile {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .tts-convert-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(255, 85, 0, 0.35);
+    }
+
+    .tts-convert-btn.mobile:hover {
+      transform: translateX(-50%) scale(1.05);
+    }
+
+    .tts-convert-btn:active {
+      transform: scale(0.95);
+    }
+
+    .tts-convert-btn.mobile:active {
+      transform: translateX(-50%) scale(0.95);
+    }
+  `;
+  document.head.appendChild(style);
+
+  let convertButton = document.createElement('button');
+  convertButton.className = 'tts-convert-btn';
+  convertButton.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+      <line x1="12" y1="19" x2="12" y2="23"></line>
+      <line x1="8" y1="23" x2="16" y2="23"></line>
+    </svg>
+    TTS with Reseter TTS
+  `;
+  document.body.appendChild(convertButton);
+
+  function isMobile() {
+    return window.innerWidth < 768;
+  }
+
+  function updateButtonPosition() {
+    if (isMobile()) {
+      convertButton.classList.add("mobile");
+      convertButton.classList.remove("desktop");
+    } else {
+      convertButton.classList.add("desktop");
+      convertButton.classList.remove("mobile");
+    }
+  }
+
+  window.addEventListener("resize", updateButtonPosition);
+  updateButtonPosition();
+
+  convertButton.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const selectedText = window.getSelection().toString().trim();
+    if (!selectedText) {
+      chrome.runtime.sendMessage({
+        action: "ShowError",
+        error: "No text selected! Please select some text first."
+      });
+      return;
+    }
+
+    chrome.runtime.sendMessage({
+      action: "HandleConvertOnContentButton",
+      text: selectedText
+    }, function (response) {
+      console.log("Response from background:", response);
+    });
+  });
+})();

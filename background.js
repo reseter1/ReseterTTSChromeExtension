@@ -56,6 +56,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (conversionInProgress) return;
     if (info.menuItemId !== "reseter-tts-converter") return;
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -96,4 +97,51 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
             });
         });
     });
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "HandleConvertOnContentButton") {
+        if (conversionInProgress) return true;
+
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (!tabs.length) return;
+
+            chrome.permissions.contains({ origins: [tabs[0].url] }, (hasPermission) => {
+                if (!hasPermission) {
+                    console.log("No permission for this host");
+                    return;
+                }
+
+                chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc: null });
+
+                ConvertText(request.text).then(audioSrc => {
+                    if (!cancelRequested) {
+                        chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc });
+                    }
+                }).catch(error => {
+                    if (error.message !== "Conversion cancelled") {
+                        chrome.tabs.sendMessage(tabs[0].id, {
+                            action: "ShowError",
+                            error: error.message || "Failed to convert text to speech. Please try again"
+                        });
+                    }
+                });
+            });
+        });
+
+        return true;
+    }
+
+    if (request.action === "ShowError") {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (!tabs.length) return;
+            chrome.tabs.sendMessage(tabs[0].id, request);
+        });
+        return true;
+    }
+
+    if (request.action === "CancelConversion" && conversionInProgress) {
+        cancelRequested = true;
+        return true;
+    }
 });

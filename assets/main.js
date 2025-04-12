@@ -243,7 +243,18 @@ document.querySelectorAll('.ripple').forEach(rippleElement => {
 
 document.querySelector('.save-button').addEventListener('click', () => saveSettings());
 
-function saveSettings() {
+function saveSettings() { 
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      files: ['assets/content.js']
+    }).then(() => {
+      chrome.tabs.sendMessage(tabs[0].id, { action: "InjectConvertButton" });
+    }).catch(error => {
+      console.error("Error injecting script:", error);
+    });
+  });
+
   const currentProvider = providerTrigger.textContent.trim() === 'FreeTTS' ? 'FreeTTS' : 'OpenAITTS';
   const speechRate = parseFloat(speechRateInput.value);
   const selectedVoiceOption = voiceOptions.querySelector('.custom-option.selected');
