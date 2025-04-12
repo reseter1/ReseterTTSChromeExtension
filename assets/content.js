@@ -311,7 +311,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       document.body.appendChild(audioPlayer);
     }
 
-    // Hiển thị player với trạng thái loading
     if (request.action === "InjectAudio" && !request.audioSrc) {
       audioPlayer.innerHTML = `
               <button class="close-btn">
@@ -357,7 +356,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     audioPlayer.innerHTML = '';
 
-    // Khởi tạo Web Audio API context và các biến cần thiết
     let audioContext;
     let audioSource;
     let audioBuffer;
@@ -368,7 +366,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     let progressUpdateInterval;
     let gainNode;
 
-    // Thay thế hàm createBlobUrlFromSrc bằng hàm xử lý audio trực tiếp
     const processAudioFromSrc = (src) => {
       return new Promise((resolve, reject) => {
         fetch(src)
@@ -379,12 +376,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return response.arrayBuffer();
           })
           .then(arrayBuffer => {
-            // Khởi tạo AudioContext nếu chưa có
             if (!audioContext) {
               audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
 
-            // Decode audio data
             return audioContext.decodeAudioData(arrayBuffer);
           })
           .then(buffer => {
@@ -399,7 +394,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     };
 
-    // Tạo audio element giả (để tương thích với giao diện hiện tại)
     const audioElement = {
       duration: 0,
       currentTime: 0,
@@ -417,40 +411,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               audioContext.resume();
             }
 
-            // Dừng nguồn âm thanh hiện tại nếu có
             if (audioSource) {
               audioSource.stop();
               audioSource = null;
             }
 
-            // Tạo nguồn âm thanh mới
             audioSource = audioContext.createBufferSource();
             audioSource.buffer = audioBuffer;
 
-            // Tạo mới gain node cho điều chỉnh âm lượng
             gainNode = audioContext.createGain();
             gainNode.gain.value = this.volume;
 
-            // Kết nối các node
             audioSource.connect(gainNode);
             gainNode.connect(audioContext.destination);
 
-            // Ghi lại thời điểm bắt đầu phát
             startTime = audioContext.currentTime;
 
-            // Bắt đầu phát từ vị trí pausedTime
             audioSource.start(0, pausedTime);
             isPlaying = true;
             this.paused = false;
 
-            // Thiết lập interval để cập nhật tiến trình
             if (progressUpdateInterval) {
               clearInterval(progressUpdateInterval);
             }
 
             progressUpdateInterval = setInterval(() => {
               if (isPlaying) {
-                // Tính toán thời gian hiện tại
                 const elapsedTime = audioContext.currentTime - startTime;
                 this.currentTime = Math.min(pausedTime + elapsedTime, audioDuration);
 
@@ -471,11 +457,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               }
             }, 30);
 
-            // Xử lý sự kiện kết thúc
             audioSource.onended = () => {
               if (!isPlaying) return;
 
-              // Nếu kết thúc do đã phát hết, reset về đầu
               if (pausedTime + (audioContext.currentTime - startTime) >= audioDuration - 0.1) {
                 this.pause();
                 pausedTime = 0;
@@ -497,15 +481,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (!isPlaying || !audioSource) return;
 
         try {
-          // Dừng nguồn âm thanh
           audioSource.stop();
           audioSource = null;
 
-          // Lưu vị trí đã tạm dừng
           const elapsedTime = audioContext.currentTime - startTime;
           pausedTime = Math.min(pausedTime + elapsedTime, audioDuration);
 
-          // Cập nhật trạng thái
           isPlaying = false;
           this.paused = true;
         } catch (error) {
@@ -526,19 +507,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     };
 
-    // Xử lý phát từ vị trí mới khi click vào thanh tiến trình
     function seekToPosition(positionPercent) {
       try {
-        // Tính toán thời gian mới dựa trên phần trăm
         const newPosition = Math.max(0, Math.min(positionPercent, 1)) * audioDuration;
 
-        // Dừng nguồn âm thanh hiện tại nếu đang phát
         if (audioSource && isPlaying) {
           audioSource.stop();
           audioSource = null;
         }
 
-        // Cập nhật thời gian và giao diện
         pausedTime = newPosition;
         audioElement.currentTime = newPosition;
         progressFill.style.width = `${(newPosition / audioDuration) * 100}%`;
