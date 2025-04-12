@@ -440,10 +440,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const elapsedTime = audioContext.currentTime - startTime;
                 this.currentTime = Math.min(pausedTime + elapsedTime, audioDuration);
 
-                // Cập nhật giao diện
                 updateProgress();
 
-                // Kiểm tra nếu đã phát hết
                 if (this.currentTime >= audioDuration - 0.1) {
                   this.pause();
                   pausedTime = 0;
@@ -521,7 +519,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         progressFill.style.width = `${(newPosition / audioDuration) * 100}%`;
         currentTimeDisplay.textContent = formatTime(newPosition);
 
-        // Nếu đang phát, bắt đầu phát lại từ vị trí mới
         if (isPlaying) {
           audioElement.play().catch(err => {
             console.error("Error playing after seek:", err);
@@ -1273,7 +1270,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Tạo nút Convert Button trực tiếp khi content script được tải
 (function injectConvertButton() {
   const style = document.createElement("style");
   style.textContent = `
