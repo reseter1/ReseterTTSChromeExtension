@@ -30,6 +30,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             animation: fadeIn 0.5s forwards;
           }
 
+          ${window.location.hostname.includes('facebook.com') ? `
+          .audio-player {
+            opacity: 1 !important;
+            transform: none !important;
+            animation: none !important;
+          }
+          ` : ''}
+
           @keyframes fadeIn {
             to {
               opacity: 1;
@@ -1019,6 +1027,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         transform: translateY(20px);
         animation: fadeIn 0.5s forwards;
       }
+
+      ${window.location.hostname.includes('facebook.com') ? `
+      .error-popup {
+        opacity: 1 !important;
+      }
+      ` : ''}
 
       /* Desktop positioning (center) */
       .error-popup.desktop {
