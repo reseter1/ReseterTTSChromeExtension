@@ -39,7 +39,7 @@ const ConvertText = async (text) => {
             throw new Error("Error optimizing text");
         }
     }
-    
+
     if (cancelRequested) {
         conversionInProgress = false;
         throw new Error("Conversion cancelled");
@@ -102,19 +102,26 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
                     return;
                 }
 
-                chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc: null });
+                chrome.tabs.sendMessage(tabs[0].id, { action: "CheckPlayerExists" }, (response) => {
+                    if (response && response.playerExists) {
+                        chrome.tabs.sendMessage(tabs[0].id, { action: "ShowError", error: "A player is already running! I've removed it for you, please try again." });
+                        return;
+                    }
 
-                ConvertText(selectedText).then(audioSrc => {
-                    if (!cancelRequested) {
-                        chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc });
-                    }
-                }).catch(error => {
-                    if (error.message !== "Conversion cancelled") {
-                        chrome.tabs.sendMessage(tabs[0].id, {
-                            action: "ShowError",
-                            error: error.message || "Failed to convert text to speech. Please try again"
-                        });
-                    }
+                    chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc: null });
+
+                    ConvertText(selectedText).then(audioSrc => {
+                        if (!cancelRequested) {
+                            chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc });
+                        }
+                    }).catch(error => {
+                        if (error.message !== "Conversion cancelled") {
+                            chrome.tabs.sendMessage(tabs[0].id, {
+                                action: "ShowError",
+                                error: error.message || "Failed to convert text to speech. Please try again"
+                            });
+                        }
+                    });
                 });
             }).catch(err => {
                 console.log("Error injecting content script:", err);
@@ -136,19 +143,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc: null });
+                chrome.tabs.sendMessage(tabs[0].id, { action: "CheckPlayerExists" }, (response) => {
+                    if (response && response.playerExists) {
+                        chrome.tabs.sendMessage(tabs[0].id, { action: "ShowError", error: "A player is already running! I've removed it for you, please try again." });
+                        return;
+                    }
 
-                ConvertText(request.text).then(audioSrc => {
-                    if (!cancelRequested) {
-                        chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc });
-                    }
-                }).catch(error => {
-                    if (error.message !== "Conversion cancelled") {
-                        chrome.tabs.sendMessage(tabs[0].id, {
-                            action: "ShowError",
-                            error: error.message || "Failed to convert text to speech. Please try again"
-                        });
-                    }
+                    chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc: null });
+
+                    ConvertText(request.text).then(audioSrc => {
+                        if (!cancelRequested) {
+                            chrome.tabs.sendMessage(tabs[0].id, { action: "InjectAudio", audioSrc });
+                        }
+                    }).catch(error => {
+                        if (error.message !== "Conversion cancelled") {
+                            chrome.tabs.sendMessage(tabs[0].id, {
+                                action: "ShowError",
+                                error: error.message || "Failed to convert text to speech. Please try again"
+                            });
+                        }
+                    });
                 });
             });
         });

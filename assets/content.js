@@ -1,3 +1,14 @@
+// Định nghĩa các biến toàn cục cho audio
+let globalAudioContext = null;
+let globalAudioSource = null;
+let globalAudioBuffer = null;
+let globalStartTime = 0;
+let globalPausedTime = 0;
+let globalIsPlaying = false;
+let globalAudioDuration = 0;
+let globalProgressUpdateInterval = null;
+let globalGainNode = null;
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "InjectAudio") {
     const style = document.createElement("style");
@@ -356,6 +367,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     audioPlayer.innerHTML = '';
 
+    // Cập nhật các biến toàn cục thay vì sử dụng biến cục bộ
     let audioContext;
     let audioSource;
     let audioBuffer;
@@ -378,6 +390,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           .then(arrayBuffer => {
             if (!audioContext) {
               audioContext = new (window.AudioContext || window.webkitAudioContext)();
+              globalAudioContext = audioContext;
             }
 
             return audioContext.decodeAudioData(arrayBuffer);
@@ -385,6 +398,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           .then(buffer => {
             audioBuffer = buffer;
             audioDuration = buffer.duration;
+            globalAudioBuffer = buffer;
             resolve(buffer);
           })
           .catch(error => {
@@ -405,6 +419,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           try {
             if (!audioContext) {
               audioContext = new (window.AudioContext || window.webkitAudioContext)();
+              globalAudioContext = audioContext;
             }
 
             if (audioContext.state === 'suspended') {
@@ -414,25 +429,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (audioSource) {
               audioSource.stop();
               audioSource = null;
+              globalAudioSource = null;
             }
 
             audioSource = audioContext.createBufferSource();
+            globalAudioSource = audioSource;
             audioSource.buffer = audioBuffer;
 
             gainNode = audioContext.createGain();
+            globalGainNode = gainNode;
             gainNode.gain.value = this.volume;
 
             audioSource.connect(gainNode);
             gainNode.connect(audioContext.destination);
 
             startTime = audioContext.currentTime;
+            globalStartTime = startTime;
 
             audioSource.start(0, pausedTime);
             isPlaying = true;
+            globalIsPlaying = true;
             this.paused = false;
 
             if (progressUpdateInterval) {
               clearInterval(progressUpdateInterval);
+              globalProgressUpdateInterval = null;
             }
 
             progressUpdateInterval = setInterval(() => {
@@ -445,15 +466,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 if (this.currentTime >= audioDuration - 0.1) {
                   this.pause();
                   pausedTime = 0;
+                  globalPausedTime = 0;
                   this.currentTime = 0;
                   playIcon.classList.remove("hidden");
                   pauseIcon.classList.add("hidden");
                   clearInterval(progressUpdateInterval);
+                  globalProgressUpdateInterval = null;
                 }
               } else {
                 clearInterval(progressUpdateInterval);
+                globalProgressUpdateInterval = null;
               }
             }, 30);
+            globalProgressUpdateInterval = progressUpdateInterval;
 
             audioSource.onended = () => {
               if (!isPlaying) return;
@@ -461,6 +486,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               if (pausedTime + (audioContext.currentTime - startTime) >= audioDuration - 0.1) {
                 this.pause();
                 pausedTime = 0;
+                globalPausedTime = 0;
                 this.currentTime = 0;
                 playIcon.classList.remove("hidden");
                 pauseIcon.classList.add("hidden");
@@ -481,11 +507,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         try {
           audioSource.stop();
           audioSource = null;
+          globalAudioSource = null;
 
           const elapsedTime = audioContext.currentTime - startTime;
           pausedTime = Math.min(pausedTime + elapsedTime, audioDuration);
+          globalPausedTime = pausedTime;
 
           isPlaying = false;
+          globalIsPlaying = false;
           this.paused = true;
         } catch (error) {
           console.error('Error pausing audio:', error);
@@ -512,9 +541,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (audioSource && isPlaying) {
           audioSource.stop();
           audioSource = null;
+          globalAudioSource = null;
         }
 
         pausedTime = newPosition;
+        globalPausedTime = newPosition;
         audioElement.currentTime = newPosition;
         progressFill.style.width = `${(newPosition / audioDuration) * 100}%`;
         currentTimeDisplay.textContent = formatTime(newPosition);
@@ -669,10 +700,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
         playIcon.classList.add("hidden");
         pauseIcon.classList.remove("hidden");
+        isPlaying = true;
+        globalIsPlaying = true;
       } else {
         audioElement.pause();
         playIcon.classList.remove("hidden");
         pauseIcon.classList.add("hidden");
+        isPlaying = false;
+        globalIsPlaying = false;
       }
     }
 
@@ -702,15 +737,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (audioSource && isPlaying) {
         audioSource.stop();
         audioSource = null;
+        globalAudioSource = null;
       }
 
       if (progressUpdateInterval) {
         clearInterval(progressUpdateInterval);
         progressUpdateInterval = null;
+        globalProgressUpdateInterval = null;
       }
 
       isPlaying = false;
+      globalIsPlaying = false;
       pausedTime = 0;
+      globalPausedTime = 0;
 
       audioPlayer.style.animation = "none";
       audioPlayer.style.opacity = "1";
@@ -725,7 +764,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       setTimeout(() => {
         audioBuffer = null;
+        globalAudioBuffer = null;
         gainNode = null;
+        globalGainNode = null;
 
         if (audioContext && audioContext.state !== 'closed') {
           try {
@@ -734,6 +775,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.log('Error closing AudioContext:', e);
           }
           audioContext = null;
+          globalAudioContext = null;
         }
 
         audioPlayer.remove();
@@ -945,6 +987,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
       }
     });
+
+    // Cập nhật các biến toàn cục
+    globalAudioContext = audioContext;
+    globalAudioSource = audioSource;
+    globalAudioBuffer = audioBuffer;
+    globalStartTime = startTime;
+    globalPausedTime = pausedTime;
+    globalIsPlaying = isPlaying;
+    globalAudioDuration = audioDuration;
+    globalProgressUpdateInterval = progressUpdateInterval;
+    globalGainNode = gainNode;
+
   } else if (request.action === "ShowError") {
     const style = document.createElement("style");
     style.textContent = `
@@ -1082,6 +1136,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     const existingAudioPlayer = document.querySelector('.audio-player');
     if (existingAudioPlayer) {
+      // Dừng âm thanh đang phát trước khi xóa player
+      if (globalAudioSource && globalIsPlaying) {
+        globalAudioSource.stop();
+        globalAudioSource = null;
+      }
+
+      // Xóa interval update progress nếu có
+      if (globalProgressUpdateInterval) {
+        clearInterval(globalProgressUpdateInterval);
+        globalProgressUpdateInterval = null;
+      }
+
+      // Đặt lại các biến trạng thái
+      globalIsPlaying = false;
+      globalPausedTime = 0;
+      globalAudioBuffer = null;
+      globalGainNode = null;
+
+      // Đóng audio context nếu đang mở
+      if (globalAudioContext && globalAudioContext.state !== 'closed') {
+        try {
+          globalAudioContext.close().catch(e => console.log('Cannot close AudioContext:', e));
+        } catch (e) {
+          console.log('Error closing AudioContext:', e);
+        }
+        globalAudioContext = null;
+      }
+
       existingAudioPlayer.remove();
     }
 
@@ -1267,6 +1349,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log("Response from background:", response);
       });
     });
+  } else if (request.action === "CheckPlayerExists") {
+    const audioPlayerExists = !!document.querySelector('.audio-player');
+    sendResponse({ playerExists: audioPlayerExists });
+    return true;
   }
 });
 

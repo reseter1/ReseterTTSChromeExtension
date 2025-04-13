@@ -153,6 +153,14 @@ providerOptions.forEach(option => {
     const provider = option.getAttribute('data-value');
     updateVoiceOptions(provider);
 
+    // Chọn giọng đầu tiên cho nhà cung cấp mới
+    const firstVoiceOption = voiceOptions.querySelector('.custom-option');
+    if (firstVoiceOption) {
+      voiceOptions.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+      firstVoiceOption.classList.add('selected');
+      voiceTrigger.textContent = firstVoiceOption.textContent;
+    }
+
     chrome.storage.local.get(['settings'], (result) => {
       let settingsData = result.settings;
       if (!settingsData || !settingsData.providers) {
@@ -240,7 +248,10 @@ function updateVoiceOptions(provider) {
     voiceOptions.appendChild(option);
   }
 
-  if (firstOption) voiceTrigger.textContent = firstOption.textContent;
+  if (firstOption) {
+    voiceTrigger.textContent = firstOption.textContent;
+    firstOption.classList.add('selected');
+  }
 }
 
 document.querySelectorAll('.ripple').forEach(rippleElement => {
@@ -274,7 +285,8 @@ function saveSettings() {
   const currentProvider = providerTrigger.textContent.trim() === 'FreeTTS' ? 'FreeTTS' : 'OpenAITTS';
   const speechRate = parseFloat(speechRateInput.value);
   const selectedVoiceOption = voiceOptions.querySelector('.custom-option.selected');
-  const voice = selectedVoiceOption ? selectedVoiceOption.getAttribute('data-value') : '1';
+  const defaultVoice = currentProvider === 'FreeTTS' ? '1' : 'OA001';
+  const voice = selectedVoiceOption ? selectedVoiceOption.getAttribute('data-value') : defaultVoice;
   const selectedLanguageOption = languageSelectWrapper.querySelector('.custom-option.selected');
   const language = selectedLanguageOption ? selectedLanguageOption.getAttribute('data-value').toLowerCase() : 'en';
   const selectedTextOptimizeOption = textOptimizeSelectWrapper.querySelector('.custom-option.selected');
