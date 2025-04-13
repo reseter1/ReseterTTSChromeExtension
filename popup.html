@@ -427,6 +427,29 @@
     .save-button:active {
       transform: scale(0.95);
     }
+
+    .form-textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #333;
+      background-color: rgba(0, 0, 0, 0.03);
+      resize: vertical;
+      min-height: 80px;
+      transition: all 0.2s ease;
+    }
+
+    .form-textarea:hover {
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    }
   </style>
 </head>
 
@@ -485,6 +508,11 @@
             <span class="custom-option" data-value="true">True</span>
           </div>
         </div>
+      </div>
+
+      <div class="form-group" id="aiPromptGroup" style="display: none;">
+        <label for="aiPrompt" class="form-label">AI Prompt</label>
+        <textarea id="aiPrompt" class="form-textarea" rows="4" placeholder="Input your prompt here"></textarea>
       </div>
 
       <div style="height: 20px;"></div>

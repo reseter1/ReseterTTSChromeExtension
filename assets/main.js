@@ -5,13 +5,15 @@ const DEFAULT_SETTINGS = {
       speechRate: 1.0,
       voice: "1",
       language: "vi",
-      text_optimize: "false"
+      text_optimize: "false",
+      aiPrompt: "Giúp tôi chuẩn hóa văn bản này bằng cách loại bỏ những văn bản thừa không liên quan đến câu chuyện ví dụ doc truyen\nDanh sáchThể loạiTùy chỉnh\nLọc Truyện\n, chỉ giữ lại nội dung câu chuyện (nhưng nhớ giữ lại tiêu đề truyện và chương đặt ở đầu nhé), đừng đưa vào các ký tự mới đặc biệt như #, *,..., với những từ bị phân tách theo kiểu w.o.r.d thì nối chung lại thành một word như ban đầu và chỉnh sửa chính tả nếu có"
     },
     OpenAITTS: {
       url: "https://genai-reseter.servernux.com/api/v2/ttsv1-gen",
       speechRate: 1.0,
       voice: "OA001",
-      text_optimize: "false"
+      text_optimize: "false",
+      aiPrompt: "Giúp tôi chuẩn hóa văn bản này bằng cách loại bỏ những văn bản thừa không liên quan đến câu chuyện ví dụ doc truyen\nDanh sáchThể loạiTùy chỉnh\nLọc Truyện\n, chỉ giữ lại nội dung câu chuyện (nhưng nhớ giữ lại tiêu đề truyện và chương đặt ở đầu nhé), đừng đưa vào các ký tự mới đặc biệt như #, *,..., với những từ bị phân tách theo kiểu w.o.r.d thì nối chung lại thành một word như ban đầu và chỉnh sửa chính tả nếu có"
     }
   },
   current: "FreeTTS"
@@ -36,6 +38,9 @@ const languageOptions = languageSelectWrapper.querySelectorAll('.custom-option')
 const textOptimizeSelectWrapper = document.getElementById('textOptimizeSelect');
 const textOptimizeTrigger = textOptimizeSelectWrapper.querySelector('.custom-select-trigger');
 const textOptimizeOptions = textOptimizeSelectWrapper.querySelectorAll('.custom-option');
+
+const aiPromptGroup = document.getElementById('aiPromptGroup');
+const aiPromptTextarea = document.getElementById('aiPrompt');
 
 document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.local.get(['settings'], (result) => {
@@ -119,6 +124,11 @@ function loadSettings() {
         option.classList.remove('selected');
       }
     });
+
+    // Hiển thị/ẩn và đặt giá trị cho AI Prompt
+    aiPromptGroup.style.display = savedTextOptimize === "true" ? "block" : "none";
+    const defaultPrompt = "Giúp tôi chuẩn hóa văn bản này bằng cách loại bỏ những văn bản thừa không liên quan đến câu chuyện ví dụ doc truyen\nDanh sáchThể loạiTùy chỉnh\nLọc Truyện\n, chỉ giữ lại nội dung câu chuyện (nhưng nhớ giữ lại tiêu đề truyện và chương đặt ở đầu nhé), đừng đưa vào các ký tự mới đặc biệt như #, *,..., với những từ bị phân tách theo kiểu w.o.r.d thì nối chung lại thành một word như ban đầu và chỉnh sửa chính tả nếu có";
+    aiPromptTextarea.value = currentSettings.aiPrompt || defaultPrompt;
   });
 }
 
@@ -291,6 +301,7 @@ function saveSettings() {
   const language = selectedLanguageOption ? selectedLanguageOption.getAttribute('data-value').toLowerCase() : 'en';
   const selectedTextOptimizeOption = textOptimizeSelectWrapper.querySelector('.custom-option.selected');
   const text_optimize = selectedTextOptimizeOption ? selectedTextOptimizeOption.getAttribute('data-value') : 'false';
+  const aiPrompt = aiPromptTextarea.value.trim();
 
   chrome.storage.local.get(['settings'], (result) => {
     let settingsData = result.settings;
@@ -303,14 +314,16 @@ function saveSettings() {
         speechRate,
         voice,
         language,
-        text_optimize
+        text_optimize,
+        aiPrompt
       };
     } else if (currentProvider === 'OpenAITTS') {
       settingsData.providers.OpenAITTS = {
         url: settingsData.providers.OpenAITTS.url || DEFAULT_SETTINGS.providers.OpenAITTS.url,
         speechRate,
         voice,
-        text_optimize
+        text_optimize,
+        aiPrompt
       };
     }
     settingsData.current = currentProvider;
@@ -336,5 +349,9 @@ textOptimizeOptions.forEach(option => {
     option.classList.add('selected');
     textOptimizeTrigger.textContent = option.textContent;
     textOptimizeSelectWrapper.classList.remove('open');
+
+    // Hiển thị/ẩn nhóm input AI Prompt
+    const isOptimizeEnabled = option.getAttribute('data-value') === 'true';
+    aiPromptGroup.style.display = isOptimizeEnabled ? 'block' : 'none';
   });
 });
