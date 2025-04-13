@@ -68,7 +68,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           /* Player title */
           .player-title {
             font-size: 16px;
-            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            font-family: 'Outfit', 'Kanit', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
             font-weight: 600;
             margin-bottom: 14px;
             white-space: nowrap;
@@ -134,6 +134,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             min-width: 42px;
             font-variant-numeric: tabular-nums;
             font-weight: 500;
+            font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
           }
 
           .duration {
@@ -1062,6 +1063,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         display: flex;
         align-items: center;
         gap: 8px;
+        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
       .error-title svg {
@@ -1076,6 +1078,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         color: #333;
         line-height: 1.5;
         margin-bottom: 16px;
+        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
       /* Close button - for the error popup */
@@ -1120,6 +1123,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         width: 100%;
         transition: all 0.2s ease;
         box-shadow: 0 2px 4px rgba(211, 47, 47, 0.2);
+        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
       .error-btn:hover {
@@ -1265,6 +1269,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         box-shadow: 0 4px 12px rgba(255, 85, 0, 0.3);
         cursor: pointer;
         transition: all 0.3s ease;
+        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
 
       /* Desktop positioning (bottom-right) */
@@ -1278,6 +1283,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
+        padding: 8px 14px;
+        font-size: 12px;
+        border-radius: 20px;
       }
 
       .tts-convert-btn:hover {
@@ -1296,13 +1304,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .tts-convert-btn.mobile:active {
         transform: translateX(-50%) scale(0.95);
       }
+
+      .tts-convert-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+      
+      .tts-convert-btn.mobile svg {
+        width: 14px;
+        height: 14px;
+      }
     `;
     document.head.appendChild(style);
 
     let convertButton = document.createElement('button');
     convertButton.className = 'tts-convert-btn';
     convertButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
         <line x1="12" y1="19" x2="12" y2="23"></line>
@@ -1376,6 +1394,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       box-shadow: 0 4px 12px rgba(255, 85, 0, 0.3);
       cursor: pointer;
       transition: all 0.3s ease;
+      font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
     /* Desktop positioning (bottom-right) */
@@ -1389,6 +1408,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
+      padding: 8px 14px;
+      font-size: 12px;
+      border-radius: 20px;
     }
 
     .tts-convert-btn:hover {
@@ -1407,13 +1429,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     .tts-convert-btn.mobile:active {
       transform: translateX(-50%) scale(0.95);
     }
+
+    .tts-convert-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .tts-convert-btn.mobile svg {
+      width: 14px;
+      height: 14px;
+    }
   `;
   document.head.appendChild(style);
 
   let convertButton = document.createElement('button');
   convertButton.className = 'tts-convert-btn';
   convertButton.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
       <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
       <line x1="12" y1="19" x2="12" y2="23"></line>
