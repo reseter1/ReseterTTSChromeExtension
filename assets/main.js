@@ -4,12 +4,14 @@ const DEFAULT_SETTINGS = {
       url: "https://genai-reseter.servernux.com/api/v2/ttsv2-gen",
       speechRate: 1.0,
       voice: "1",
-      language: "vi"
+      language: "vi",
+      text_optimize: "false"
     },
     OpenAITTS: {
       url: "https://genai-reseter.servernux.com/api/v2/ttsv1-gen",
       speechRate: 1.0,
-      voice: "OA001"
+      voice: "OA001",
+      text_optimize: "false"
     }
   },
   current: "FreeTTS"
@@ -30,6 +32,10 @@ const languageGroup = document.getElementById('languageGroup');
 const languageSelectWrapper = document.getElementById('languageSelect');
 const languageTrigger = languageSelectWrapper.querySelector('.custom-select-trigger');
 const languageOptions = languageSelectWrapper.querySelectorAll('.custom-option');
+
+const textOptimizeSelectWrapper = document.getElementById('textOptimizeSelect');
+const textOptimizeTrigger = textOptimizeSelectWrapper.querySelector('.custom-select-trigger');
+const textOptimizeOptions = textOptimizeSelectWrapper.querySelectorAll('.custom-option');
 
 document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.local.get(['settings'], (result) => {
@@ -103,6 +109,16 @@ function loadSettings() {
     }
 
     languageGroup.style.display = currentProviderName === 'FreeTTS' ? 'block' : 'none';
+
+    const savedTextOptimize = currentSettings.text_optimize || "false";
+    textOptimizeOptions.forEach(option => {
+      if (option.getAttribute('data-value') === savedTextOptimize) {
+        option.classList.add('selected');
+        textOptimizeTrigger.textContent = option.textContent;
+      } else {
+        option.classList.remove('selected');
+      }
+    });
   });
 }
 
@@ -136,6 +152,14 @@ providerOptions.forEach(option => {
 
     const provider = option.getAttribute('data-value');
     updateVoiceOptions(provider);
+
+    // Chọn giọng đầu tiên cho nhà cung cấp mới
+    const firstVoiceOption = voiceOptions.querySelector('.custom-option');
+    if (firstVoiceOption) {
+      voiceOptions.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+      firstVoiceOption.classList.add('selected');
+      voiceTrigger.textContent = firstVoiceOption.textContent;
+    }
 
     chrome.storage.local.get(['settings'], (result) => {
       let settingsData = result.settings;
@@ -224,7 +248,10 @@ function updateVoiceOptions(provider) {
     voiceOptions.appendChild(option);
   }
 
-  if (firstOption) voiceTrigger.textContent = firstOption.textContent;
+  if (firstOption) {
+    voiceTrigger.textContent = firstOption.textContent;
+    firstOption.classList.add('selected');
+  }
 }
 
 document.querySelectorAll('.ripple').forEach(rippleElement => {
@@ -243,7 +270,7 @@ document.querySelectorAll('.ripple').forEach(rippleElement => {
 
 document.querySelector('.save-button').addEventListener('click', () => saveSettings());
 
-function saveSettings() { 
+function saveSettings() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     chrome.scripting.executeScript({
       target: { tabId: tabs[0].id },
@@ -258,9 +285,12 @@ function saveSettings() {
   const currentProvider = providerTrigger.textContent.trim() === 'FreeTTS' ? 'FreeTTS' : 'OpenAITTS';
   const speechRate = parseFloat(speechRateInput.value);
   const selectedVoiceOption = voiceOptions.querySelector('.custom-option.selected');
-  const voice = selectedVoiceOption ? selectedVoiceOption.getAttribute('data-value') : '1';
+  const defaultVoice = currentProvider === 'FreeTTS' ? '1' : 'OA001';
+  const voice = selectedVoiceOption ? selectedVoiceOption.getAttribute('data-value') : defaultVoice;
   const selectedLanguageOption = languageSelectWrapper.querySelector('.custom-option.selected');
   const language = selectedLanguageOption ? selectedLanguageOption.getAttribute('data-value').toLowerCase() : 'en';
+  const selectedTextOptimizeOption = textOptimizeSelectWrapper.querySelector('.custom-option.selected');
+  const text_optimize = selectedTextOptimizeOption ? selectedTextOptimizeOption.getAttribute('data-value') : 'false';
 
   chrome.storage.local.get(['settings'], (result) => {
     let settingsData = result.settings;
@@ -272,13 +302,15 @@ function saveSettings() {
         url: settingsData.providers.FreeTTS.url || DEFAULT_SETTINGS.providers.FreeTTS.url,
         speechRate,
         voice,
-        language
+        language,
+        text_optimize
       };
     } else if (currentProvider === 'OpenAITTS') {
       settingsData.providers.OpenAITTS = {
         url: settingsData.providers.OpenAITTS.url || DEFAULT_SETTINGS.providers.OpenAITTS.url,
         speechRate,
-        voice
+        voice,
+        text_optimize
       };
     }
     settingsData.current = currentProvider;
@@ -297,3 +329,12 @@ function saveSettings() {
     });
   });
 }
+
+textOptimizeOptions.forEach(option => {
+  option.addEventListener('click', () => {
+    textOptimizeOptions.forEach(opt => opt.classList.remove('selected'));
+    option.classList.add('selected');
+    textOptimizeTrigger.textContent = option.textContent;
+    textOptimizeSelectWrapper.classList.remove('open');
+  });
+});
