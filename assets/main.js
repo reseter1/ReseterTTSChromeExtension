@@ -125,7 +125,6 @@ function loadSettings() {
       }
     });
 
-    // Hiển thị/ẩn và đặt giá trị cho AI Prompt
     aiPromptGroup.style.display = savedTextOptimize === "true" ? "block" : "none";
     const defaultPrompt = "Giúp tôi chuẩn hóa văn bản này bằng cách loại bỏ những văn bản thừa không liên quan đến câu chuyện ví dụ doc truyen\nDanh sáchThể loạiTùy chỉnh\nLọc Truyện\n, chỉ giữ lại nội dung câu chuyện (nhưng nhớ giữ lại tiêu đề truyện và chương đặt ở đầu nhé), đừng đưa vào các ký tự mới đặc biệt như #, *,..., với những từ bị phân tách theo kiểu w.o.r.d thì nối chung lại thành một word như ban đầu và chỉnh sửa chính tả nếu có";
     aiPromptTextarea.value = currentSettings.aiPrompt || defaultPrompt;
@@ -163,7 +162,6 @@ providerOptions.forEach(option => {
     const provider = option.getAttribute('data-value');
     updateVoiceOptions(provider);
 
-    // Chọn giọng đầu tiên cho nhà cung cấp mới
     const firstVoiceOption = voiceOptions.querySelector('.custom-option');
     if (firstVoiceOption) {
       voiceOptions.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
@@ -350,7 +348,6 @@ textOptimizeOptions.forEach(option => {
     textOptimizeTrigger.textContent = option.textContent;
     textOptimizeSelectWrapper.classList.remove('open');
 
-    // Hiển thị/ẩn nhóm input AI Prompt
     const isOptimizeEnabled = option.getAttribute('data-value') === 'true';
     aiPromptGroup.style.display = isOptimizeEnabled ? 'block' : 'none';
   });

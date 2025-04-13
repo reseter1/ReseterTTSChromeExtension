@@ -1,4 +1,3 @@
-// Định nghĩa các biến toàn cục cho audio
 let globalAudioContext = null;
 let globalAudioSource = null;
 let globalAudioBuffer = null;
@@ -376,7 +375,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     audioPlayer.innerHTML = '';
 
-    // Cập nhật các biến toàn cục thay vì sử dụng biến cục bộ
     let audioContext;
     let audioSource;
     let audioBuffer;
@@ -997,7 +995,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     });
 
-    // Cập nhật các biến toàn cục
     globalAudioContext = audioContext;
     globalAudioSource = audioSource;
     globalAudioBuffer = audioBuffer;
@@ -1154,25 +1151,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     const existingAudioPlayer = document.querySelector('.audio-player');
     if (existingAudioPlayer) {
-      // Dừng âm thanh đang phát trước khi xóa player
       if (globalAudioSource && globalIsPlaying) {
         globalAudioSource.stop();
         globalAudioSource = null;
       }
 
-      // Xóa interval update progress nếu có
       if (globalProgressUpdateInterval) {
         clearInterval(globalProgressUpdateInterval);
         globalProgressUpdateInterval = null;
       }
 
-      // Đặt lại các biến trạng thái
       globalIsPlaying = false;
       globalPausedTime = 0;
       globalAudioBuffer = null;
       globalGainNode = null;
 
-      // Đóng audio context nếu đang mở
       if (globalAudioContext && globalAudioContext.state !== 'closed') {
         try {
           globalAudioContext.close().catch(e => console.log('Cannot close AudioContext:', e));
