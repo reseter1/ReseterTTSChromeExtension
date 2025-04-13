@@ -74,17 +74,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
           /* Player title */
           .player-title {
-            font-size: 16px;
-            font-family: 'Outfit', 'Kanit', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-            font-weight: 600;
+            font-size: 16px !important;
+            font-family: 'Outfit', 'Kanit', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif !important;
+            font-weight: 600 !important;
             margin-bottom: 14px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            color: #333;
+            color: #333 !important;
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-            letter-spacing: -0.2px;
+            letter-spacing: -0.2px !important;
           }
 
           /* Player controls container */
@@ -136,12 +136,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
           /* Time display */
           .time-display {
-            font-size: 13px;
-            color: #666;
+            font-size: 13px !important;
+            color: #666 !important;
             min-width: 42px;
-            font-variant-numeric: tabular-nums;
-            font-weight: 500;
-            font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            font-variant-numeric: tabular-nums !important;
+            font-weight: 500 !important;
+            font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, Arial, sans-serif !important;
           }
 
           .duration {
@@ -259,7 +259,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
             .time-display {
               min-width: 38px;
-              font-size: 12px;
+              font-size: 12px !important;
             }
             
             .audio-player {
@@ -307,14 +307,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           }
           
           .loading-text {
-            font-size: 14px;
-            color: #666;
+            font-size: 14px !important;
+            color: #666 !important;
             animation: pulse 1.4s infinite ease-in-out;
             text-align: center;
             width: 100%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, Arial, sans-serif !important;
           }
           
           .player-controls.loading {
@@ -1065,31 +1066,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       /* Error title */
       .error-title {
-        font-size: 16px;
-        font-weight: 600;
+        font-size: 16px !important;
+        font-weight: 600 !important;
         margin-bottom: 12px;
-        color: #d32f2f;
+        color: #d32f2f !important;
         padding-bottom: 8px;
         border-bottom: 1px solid rgba(211, 47, 47, 0.2);
         display: flex;
         align-items: center;
         gap: 8px;
-        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
       }
 
       .error-title svg {
         width: 20px;
         height: 20px;
-        color: #d32f2f;
+        color: #d32f2f !important;
       }
 
       /* Error message */
       .error-message {
-        font-size: 14px;
-        color: #333;
+        font-size: 14px !important;
+        color: #333 !important;
         line-height: 1.5;
         margin-bottom: 16px;
-        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
       }
 
       /* Close button - for the error popup */
@@ -1117,24 +1118,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .error-close-btn svg {
         width: 14px;
         height: 14px;
-        color: #666;
+        color: #666 !important;
       }
 
       /* Button in the error popup */
       .error-btn {
         background: linear-gradient(90deg, #d32f2f, #f44336);
-        color: white;
+        color: white !important;
         border: none;
         border-radius: 6px;
         padding: 10px 16px;
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 14px !important;
+        font-weight: 500 !important;
         cursor: pointer;
         display: block;
         width: 100%;
         transition: all 0.2s ease;
         box-shadow: 0 2px 4px rgba(211, 47, 47, 0.2);
-        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
       }
 
       .error-btn:hover {
@@ -1264,19 +1265,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         position: fixed;
         z-index: 9999;
         background: linear-gradient(90deg, #f50, #ff7e33);
-        color: white;
+        color: white !important;
         border: none;
         border-radius: 30px;
         padding: 10px 20px;
-        font-size: 14px;
-        font-weight: 600;
+        font-size: 14px !important;
+        font-weight: 600 !important;
         display: flex;
         align-items: center;
         gap: 8px;
         box-shadow: 0 4px 12px rgba(255, 85, 0, 0.3);
         cursor: pointer;
         transition: all 0.3s ease;
-        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
       }
 
       /* Desktop positioning (bottom-right) */
@@ -1291,7 +1292,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         left: 50%;
         transform: translateX(-50%);
         padding: 8px 14px;
-        font-size: 12px;
+        font-size: 12px !important;
         border-radius: 20px;
       }
 
@@ -1389,19 +1390,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       position: fixed;
       z-index: 9999;
       background: linear-gradient(90deg, #f50, #ff7e33);
-      color: white;
+      color: white !important;
       border: none;
       border-radius: 30px;
       padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 14px !important;
+      font-weight: 600 !important;
       display: flex;
       align-items: center;
       gap: 8px;
       box-shadow: 0 4px 12px rgba(255, 85, 0, 0.3);
       cursor: pointer;
       transition: all 0.3s ease;
-      font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Outfit', 'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     }
 
     /* Desktop positioning (bottom-right) */
@@ -1416,7 +1417,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       left: 50%;
       transform: translateX(-50%);
       padding: 8px 14px;
-      font-size: 12px;
+      font-size: 12px !important;
       border-radius: 20px;
     }
 
