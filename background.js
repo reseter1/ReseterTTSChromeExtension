@@ -21,7 +21,9 @@ const ConvertText = async (text) => {
         throw new Error("Conversion cancelled");
     }
 
-    if (providerSettings.text_optimize) {
+    console.log(providerSettings);
+
+    if (providerSettings.text_optimize == "true") {
         const aiResponse = await fetch("https://genai-reseter.servernux.com/api/v2/ai-gen", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
