@@ -11,6 +11,7 @@ Reseter TTS Converter là một tiện ích mở rộng cho Chrome cho phép chu
 - Giao diện cài đặt dễ sử dụng với các tùy chọn thay đổi ngôn ngữ, tốc độ nói và giọng đọc.
 - Hiển thị audio-player hiện đại với hiệu ứng animation và khả năng đóng nhanh gọn.
 - Tự động lưu và tải cấu hình người dùng thông qua Chrome Storage.
+- Tối ưu hóa văn bản với AI để chuẩn hóa nội dung, loại bỏ thông tin thừa và sửa lỗi chính tả trước khi chuyển đổi.
 
 ## Cài đặt
 
@@ -28,6 +29,7 @@ Khi mở cửa sổ popup cài đặt:
 - Người dùng có thể lựa chọn giữa các nhà cung cấp chuyển đổi (FreeTTS và OpenAITTS).
 - Thay đổi tốc độ nói bằng thanh trượt điều chỉnh.
 - Chọn ngôn ngữ (VI cho tiếng Việt, EN cho tiếng Anh) thông qua dropdown.
+- Bật/tắt tính năng tối ưu hóa văn bản bằng AI, giúp chuẩn hóa nội dung trước khi chuyển đổi thành giọng nói.
 - Các cấu hình mặc định được lưu trữ trên Chrome Storage để giữ nguyên khi đóng mở tiện ích.
 
 ## Cách sử dụng
@@ -36,16 +38,19 @@ Khi mở cửa sổ popup cài đặt:
 2. Nếu quá trình chuyển đổi đang diễn ra, audio-player sẽ hiển thị trạng thái loading.
 3. Người dùng có thể nhấn nút "Save Settings" trên popup để lưu cấu hình đã thay đổi.
 4. Nếu cần hủy chuyển đổi, có thể nhấn nút "Close" trên audio-player để dừng và đóng cửa sổ phát.
+5. Khi bật tính năng "Optimize Text With AI", văn bản sẽ được tự động làm sạch và chuẩn hóa trước khi chuyển đổi, giúp cải thiện chất lượng đầu ra của giọng nói.
 
 ## Nhà cung cấp
 
 - **FreeTTS**  
   - URL: `https://genai-reseter.servernux.com/api/v2/ttsv2-gen`  
   - Mặc định: tốc độ nói 1.0, giọng đọc là "1", ngôn ngữ là "vi"
+  - Hỗ trợ tối ưu hóa văn bản với AI
 
 - **OpenAITTS**  
   - URL: `https://genai-reseter.servernux.com/api/v2/ttsv1-gen`  
   - Mặc định: tốc độ nói 1.0, giọng đọc là "OA001"
+  - Hỗ trợ tối ưu hóa văn bản với AI
 
 ## Hướng dẫn phát triển
 

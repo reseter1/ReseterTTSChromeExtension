@@ -21,6 +21,30 @@ const ConvertText = async (text) => {
         throw new Error("Conversion cancelled");
     }
 
+    if (providerSettings.text_optimize) {
+        const aiResponse = await fetch("https://genai-reseter.servernux.com/api/v2/ai-gen", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: "Giúp tôi chuẩn hóa văn bản này bằng cách loại bỏ những văn bản thừa không liên quan đến câu chuyện ví dụ doc truyen\nDanh sáchThể loạiTùy chỉnh\nLọc Truyện\n, chỉ giữ lại nội dung câu chuyện (nhưng nhớ giữ lại tiêu đề truyện và chương đặt ở đầu nhé), đừng đưa vào các ký tự mới đặc biệt như #, *,..., với những từ bị phân tách theo kiểu w.o.r.d thì nối chung lại thành một word như ban đầu và chỉnh sửa chính tả nếu có, văn bản là: " + text,
+                model: "null-flash",
+            })
+        });
+
+        if (aiResponse.ok) {
+            const aiData = await aiResponse.json();
+            text = aiData.text;
+        }
+        else {
+            throw new Error("Error optimizing text");
+        }
+    }
+    
+    if (cancelRequested) {
+        conversionInProgress = false;
+        throw new Error("Conversion cancelled");
+    }
+
     const response = await fetch(providerSettings.url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
