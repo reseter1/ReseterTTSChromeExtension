@@ -1,4 +1,26 @@
-# Reseter TTS Converter
+# Reseter TTS Converter - Tài liệu kỹ thuật
+
+## 1. Kiến trúc tổng quan
+
+Reseter TTS Converter là một tiện ích mở rộng Chrome cho phép chuyển đổi văn bản thành giọng nói, được xây dựng dựa trên:
+- APIs TTS từ nhiều nhà cung cấp (FreeTTS và OpenAITTS)
+- Chrome Extension API để tương tác với trình duyệt
+- Hỗ trợ tối ưu hóa văn bản với AI
+
+### Kiến trúc hệ thống
+
+```
+┌─────────────────┐      ┌────────────────┐      ┌───────────────────┐
+│ Chrome Extension│ ──▶ │ Content Script │ ──▶ │ API Services       │
+│ (Popup UI)      │ ◀── │ (Context Menu) │ ◀── │ (FreeTTS/OpenAITTS)│
+└─────────────────┘      └────────────────┘      └───────────────────┘
+         │                        │                        │
+         ▼                        ▼                        ▼
+┌─────────────────┐      ┌────────────────┐      ┌───────────────────┐
+│ Chrome Storage  │      │ Audio Player   │      │ AI Optimization   │
+│ (User Settings) │      │ (UI Component) │      │ (Text Processing) │
+└─────────────────┘      └────────────────┘      └───────────────────┘
+```
 
 ![Demo 1](./demo/1.png)
 
