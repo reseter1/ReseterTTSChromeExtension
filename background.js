@@ -22,7 +22,7 @@ const ConvertText = async (text) => {
     }
 
     if (providerSettings.text_optimize == "true") {
-        const aiResponse = await fetch("https://genai-reseter.servernux.com/api/v2/ai-gen", {
+        const aiResponse = await fetch("https://genai.reseter.space/api/v2/ai-gen", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

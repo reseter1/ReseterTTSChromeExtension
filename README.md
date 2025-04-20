@@ -71,12 +71,12 @@ Khi mở cửa sổ popup cài đặt:
 ## Nhà cung cấp
 
 - **FreeTTS**  
-  - URL: `https://genai-reseter.servernux.com/api/v2/ttsv2-gen`  
+  - URL: `https://genai.reseter.space/api/v2/ttsv2-gen`  
   - Mặc định: tốc độ nói 1.0, giọng đọc là "1", ngôn ngữ là "vi"
   - Hỗ trợ tối ưu hóa văn bản với AI
 
 - **OpenAITTS**  
-  - URL: `https://genai-reseter.servernux.com/api/v2/ttsv1-gen`  
+  - URL: `https://genai.reseter.space/api/v2/ttsv1-gen`  
   - Mặc định: tốc độ nói 1.0, giọng đọc là "OA001"
   - Hỗ trợ tối ưu hóa văn bản với AI
 
